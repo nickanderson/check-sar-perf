@@ -41,7 +41,7 @@ class SarNRPE:
         self.stats = []
         # Create dictionary
         for i in range(len(self.Columns)):
-            string = "'%s'=%s" %(self.Columns[i], self.Average[i])
+            string = "%s=%s" %(self.Columns[i].strip('%'), self.Average[i].strip())
             self.stats.append(string)
 
 def CheckBin(program):
