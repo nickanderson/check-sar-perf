@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import os
 import sys
+import re
 from subprocess import *
 
 
@@ -17,31 +18,56 @@ os.environ['PATH'] = '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/bin'
 #                should generally NOT be reported as UNKNOWN states. 
 
 class SarNRPE:
-
     '''Call sar and parse statistics returning in NRPE format'''
-    def __init__(self, command, handler):
+    def __init__(self, command, device=None):
         sar=Popen(command, shell=True, stdout=PIPE, stderr=PIPE)
         (sout,serr) = sar.communicate()
-        parser = getattr(self, handler)
-        if callable(parser):
-            parser(sout)
+        if device == None:
+            (columns, data) = self.SortOutput(sout)
         else:
-            print 'ERROR: parser does not exist'
-            sys.exit(3)
+            (columns, data) = self.SortCombinedOutput(sout, device)
 
-    def standard(self, sout):
-        '''Standard parser for non multi-device output'''
-        self.Average = sout.split('\n')[-2].split()
+        self.Parser(columns, data)
+
+    def SortOutput(self, sarout):
+        data = sarout.split('\n')[-2].split()
         # remove 'Average:'
-        self.Average.pop(0)
-        self.Columns = sout.split('\n')[-4].split()
+        data.pop(0)
+        columns = sarout.split('\n')[-4].split()
         # Remove Timestamp
-        self.Columns.pop(0)
-        self.Columns.pop(0)
+        columns.pop(0)
+        columns.pop(0)
+        return (columns, data)
+
+    def SortCombinedOutput(self, sarout, device):
+        '''Sort output from sar command, return columns and relevant data'''
+        find_columns = True
+        mycolumns = []
+        mydata = []
+        search = re.compile('^Average:')
+        for line in sarout.split('\n'):
+            if search.match(line):
+                if find_columns:
+                    mycolumns.append(line)
+                    find_columns = False
+                else:
+                    mydata.append(line)
+        search = re.compile('^Average:\s.*%s\s.*' %device)
+        for line in mydata:
+            if not search.match(line):
+                mydata.remove(line)
+        mycolumns = mycolumns[0].split()
+        mydata = mydata[0].split()
+        mycolumns.pop(0)
+        mydata.pop(0)
+        return (mycolumns,mydata)
+
+    def Parser(self, columns, data):
+        '''Sar parser to construct nrpe formatted device'''
         self.stats = []
         # Create dictionary
-        for i in range(len(self.Columns)):
-            string = "%s=%s" %(self.Columns[i].strip('%'), self.Average[i].strip())
+        for i in range(len(columns)):
+            string = "%s=%s" %(columns[i].strip('%'), data[i].strip())
             self.stats.append(string)
 
 def CheckBin(program):
@@ -54,6 +80,9 @@ def CheckBin(program):
 
 
 def Main(args):
+    if not len(args) > 1:
+        print 'ERROR: no profile selected'
+        sys.exit(3)
     if not CheckBin('sar'):
         print 'ERROR: sar not found on PATH (%s), install sysstat' %os.environ['PATH']
         sys.exit(2)
@@ -68,9 +97,17 @@ def Main(args):
     myOpts['swap_util'] = 'sar -S 1 1'
     myOpts['swap_stat'] = 'sar -W 1 1'
     myOpts['kernel'] = 'sar -v 1 1'
+    myOpts['disk'] = 'sar -d -p 1 1'
 
     if args[1] in myOpts:
-        sar = SarNRPE(myOpts[args[1]],'standard')
+        if args[1] == 'disk':
+            if len(args) > 2:
+                sar = SarNRPE(myOpts[args[1]],args[2])
+            else:
+                print 'ERROR: no device specified'
+                sys.exit(3)
+        else:
+            sar = SarNRPE(myOpts[args[1]])
     else:
         print 'ERROR: option not defined'
         sys.exit(3)
