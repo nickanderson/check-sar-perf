@@ -1,0 +1,16 @@
+This plugin was writting to get performance data from sar. It was developed for use with Zenoss but should work with other NRPE compatible NMS.
+
+You may need to tweak the profiles to be compatibe with your version of sysstat. Please make modifications to the myOpts section.
+
+
+Example output:
+
+check_sar_perf.py cpu
+sar OK| CPU=all user=59.90 nice=0.00 system=4.46 iowait=0.00 steal=0.00 idle=35.64
+
+check_sar_perf.py disk sda
+sar OK| DEV=sda tps=0.00 rd_sec/s=0.00 wr_sec/s=0.00 avgrq-sz=0.00 avgqu-sz=0.00 await=0.00 svctm=0.00 util=0.00
+
+check_sar_perf.py foo
+ERROR: option not defined
+
