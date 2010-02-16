@@ -97,7 +97,10 @@ class SarNRPE:
         self.stats = []
         # Create dictionary
         for i in range(len(columns)):
-            string = "%s=%s" %(columns[i].strip('%'), data[i].strip())
+            # Remove characters that cause issues (%/)
+            badchars=['%','/']
+            columns[i] = ''.join(j for j in columns[i] if j not in badchars)
+            string = "%s=%s" %(columns[i].strip('%/'), data[i].strip())
             self.stats.append(string)
 
 def CheckBin(program):
