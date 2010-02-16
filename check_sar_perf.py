@@ -122,7 +122,7 @@ def Main(args):
     # Profiles may need to be modified for different versions of the sysstat package
     # This would be a good candidate for a config file 
     myOpts = {}
-    myOpts['paging'] = 'sar -B 1 1'
+    myOpts['pagestat'] = 'sar -B 1 1'
     myOpts['cpu'] = 'sar 1 1'
     myOpts['memory_util'] = 'sar -r 1 1'
     myOpts['memory_stat'] = 'sar -R 1 1'
