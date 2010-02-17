@@ -1,6 +1,6 @@
-This plugin was writting to get performance data from sar. It was developed for use with Zenoss but should work with other NRPE compatible NMS.
+This plug-in was written to get performance data from sar. It was developed for use with Zenoss but should work with other NRPE compatible NMS.
 
-You may need to tweak the profiles to be compatibe with your version of sysstat. Please make modifications to the myOpts section.
+You may need to tweak the profiles to be compatible with your version of sysstat. Please make modifications to the myOpts section.
 
 
 Example output:
