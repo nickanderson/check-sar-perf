@@ -83,7 +83,7 @@ class SarNRPE:
                     mydata.append(line)
         # Find the only Average line with the device we are looking for
         search = re.compile('^Average:\s.*%s\s.*' %device)
-        for line in mydata:
+        for line in mydata[:]:
             if not search.match(line):
                 mydata.remove(line)
         mycolumns = mycolumns[0].split()
@@ -94,14 +94,18 @@ class SarNRPE:
 
     def Formatter(self, columns, data):
         '''Construct nrpe format performance data'''
+        search = re.compile('^[a-zA-Z]+$')
         self.stats = []
         # Create dictionary
         for i in range(len(columns)):
-            # Remove characters that cause issues (%/)
-            badchars=['%','/']
-            columns[i] = ''.join(j for j in columns[i] if j not in badchars)
-            string = "%s=%s" %(columns[i].strip('%/'), data[i].strip())
-            self.stats.append(string)
+            # Remove first column if data contains only letters
+            if i != 0 or not search.match(data[i]):
+                # Remove characters that cause issues (%/)
+                badchars=['%','/']
+                columns[i] = ''.join(j for j in columns[i] if j not in badchars)
+                string = "%s=%s" %(columns[i].strip('%/'), data[i].strip())
+                self.stats.append(string)
+                #print "Appended data: ", data[i]
 
 def CheckBin(program):
     '''Ensure the program exists in the PATH'''
